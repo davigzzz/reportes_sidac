@@ -1,0 +1,13 @@
+.barra{
+    display: flex;
+    .logo{
+        flex: 10%;
+
+    }
+    .menu{
+        display: flex;
+        justify-content: space-evenly;
+        flex: 70%;
+        flex-wrap: wrap;
+    }
+}

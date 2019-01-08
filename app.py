@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for,jsonify
 from flask_wtf import FlaskForm 
 from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Email, Length
@@ -6,6 +6,9 @@ from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bootstrap import Bootstrap
+from flaskext.mysql import MySQL
+import pygal
+import datetime
 
 app = Flask(__name__)
 
@@ -14,16 +17,58 @@ app.config['SECRET_KEY'] = 'Estadebeserlallavesecreta'
 
 #configuración del sistema de la base de datos POSTGRESQL con la librería SQLALCHEMY
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://makako:1234567@localhost/flask_dashsidac'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://invitadodb:1nvitad0@10.15.4.6/sacdbQA'
 
 bootstrap = Bootstrap(app)
 
 db = SQLAlchemy(app)
 
+mysql = MySQL()
+
+# MySQL configurations
+app.config['MYSQL_DATABASE_USER'] = 'invitadodb'
+app.config['MYSQL_DATABASE_PASSWORD'] = '1nvitad0'
+app.config['MYSQL_DATABASE_DB'] = 'sacdb'
+app.config['MYSQL_DATABASE_HOST'] = '10.15.4.6'
+mysql.init_app(app)
+
 #creación de las instancias para el manejo de sesiones 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+"""class Peticion(db.Model):
+    __tablename__ = 'peticion'
+    peticionId = db.Column('peticionId', db.Integer, primary_key=True)
+    version = db.Column('version', db.Integer)
+    anexo = db.Column('anexo', db.Bit)
+    asunto = db.Column('asunto', db.Unicode)
+    copia = db.Column('copia', db.Bit)
+    dependencia_id = db.Column('dependencia', db.Integer)
+    descPeticion = db.Column('descPeticion', db.Unicode)
+    estatus_id = 
+    fechaPeticion
+    fecha_documento
+    folioPeticion
+    folio_gira
+    improdecente_id
+    observacionesPet
+    organizacion_id
+    original
+    peticion_id
+    peticionario_id
+    plantilla_id
+    prioridad_id
+    prioritaria
+    procedencia_id
+    procedente
+    respuesta_id
+    sinopsis
+    tema_id
+    tipo_asunto_id
+    tag
+    codInterno    
+"""
 
 class User(UserMixin, db.Model):
     """ Creación del modelo de usuario en el que se ingresará 
@@ -58,9 +103,74 @@ class RegisterForm(FlaskForm):
 
 
 @app.route('/')
+def reporte():
+    cursor = mysql.connect().cursor()
+
+    #Obtener cantidad de peticiones por dias
+    cursor.execute("SELECT count(folioPeticion) as cantidad, DATE(fechaPeticion) as fecha FROM peticion WHERE DATE(fechaPeticion) > '2019-01-01' GROUP BY DATE(fechaPeticion)")
+    data = cursor.fetchall()
+
+    #Obtener cantidad de peticiones por semanas
+    cursor.execute("SELECT count(folioPeticion) as cantidad, WEEK(fechaPeticion,1) as fecha FROM peticion WHERE DATE(fechaPeticion) > '2019-01-01' GROUP BY WEEK(fechaPeticion, 1);")
+    semana = cursor.fetchall()
+
+    #Obtener cantida de peticiones por mes
+    cursor.execute("SELECT count(folioPeticion) as cantidad, MONTH(fechaPeticion) as fecha FROM peticion WHERE DATE(fechaPeticion) > '2019-01-01' GROUP BY MONTH(fechaPeticion);")
+    mes = cursor.fetchall()
+
+
+    cursor.execute("SELECT count(folioPeticion) as cantidad, DATE(fechaPeticion) as fecha FROM peticion;")
+    total = cursor.fetchall()
+
+    meses=['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+    hoy = datetime.datetime.now()
+
+    #Obtener cantidad de peticiones por año
+    cursor.execute("SELECT count(folioPeticion) as cantidad, DATE(fechaPeticion) FROM peticion GROUP BY YEAR(fechaPeticion);")
+    año = cursor.fetchall()
+
+    #for row in cursor.fetchall():
+     #   cantidad = row[0]
+    print ("***************************************")
+    print (año)
+
+    #print (cantidad)
+
+    chart = pygal.Line()
+    chart.title = 'Total de entradas por año'
+
+    años = []
+    for y in año:    
+        años.append(y[1].strftime("%Y"))
+
+    chart.x_labels = años
+    
+    entradas = []
+    for e in año:
+        entradas.append(e[0])
+
+
+    chart.add('Años', entradas)
+    
+
+    
+
+    grafica = chart.render_data_uri()
+
+    
+    return render_template('index.html', grafica=grafica, total=total, semana=semana, meses=meses, mes=mes, año=año)
+    #, data=data, semana=semana, mes=mes, meses=meses, total=total
+"""
+
+@app.route('/')
 def index():
-    """ Ruta para el inicio de la aplicación que renderiza a index.html"""
+
+    #Ruta para el inicio de la aplicación que renderiza a index.html
     return render_template('index.html')
+"""
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -111,6 +221,9 @@ def logout():
     """ Ruta para la salida del sistema, redirecciona al index (función index)"""
     logout_user()
     return redirect(url_for('index'))
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

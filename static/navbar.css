@@ -1,0 +1,14 @@
+.barra {
+  display: flex;
+}
+.barra .logo {
+  flex: 10%;
+}
+.barra .menu {
+  display: flex;
+  justify-content: space-evenly;
+  flex: 70%;
+  flex-wrap: wrap;
+}
+
+/*# sourceMappingURL=navbar.css.map */

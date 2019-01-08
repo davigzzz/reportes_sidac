@@ -1,0 +1,56 @@
+{% extends "bootstrap/base.html" %}
+{% block title %} Reportes SIDAC {% endblock %}
+
+{% block content %}
+
+{% include 'includes/_navbar.html' %}
+<div role="tabpanel">
+  <ul role="tablist" class="nav nav-tabs">
+    <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Inicio</a></li>
+    <li role="presentation" class=""><a href="#semana" aria-controls="semana" role="tab" data-toggle="tab">Semana</a></li>
+    <li role="presentation" class=""><a href="#mes" aria-controls="mes" role="tab" data-toggle="tab">Mes</a></li>
+
+  </ul>
+
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane fade in active" id="home">
+      <div class="panel-body">
+        {% for item in data %}
+        <p>
+          <button class="btn btn-primary" type="button">
+            Fecha {{ item.1 }} <span class="badge">{{ item.0 }}</span>
+          </button>
+        </p>
+        {% endfor %}
+      </div>
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="semana">
+      <div class="panel-body">
+        {% for item in semana %}
+        <p>
+          <button class="btn btn-primary" type="button">
+            Semana {{ item.1}} <span class="badge">{{item.0}}</span>
+          </button>
+          {% endfor %}
+        </p>
+      </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="mes">
+      <div class="panel-body">
+        {% for item in mes %}
+        <button class="btn btn-primary" type="button">
+         
+         {{meses[(item.1)-1]}} <span class="badge">{{item.0}}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+{% endblock %}
